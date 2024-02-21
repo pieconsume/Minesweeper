@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+ <head>
+  <title>Minesweeper</title>
+  <style>
+   * { position: absolute; margin: 0px; border-width: 0px; padding: 0px; outline: none;  -webkit-touch-callout: none; -webkit-user-select: none; -khtml-user-select: none; -moz-user-select: none; -ms-user-select: none; user-select: none; }
+   div { border-style: solid; border-width: 2px; }
+   #settings > div { width: 50px; height: 20px; }
+   .textbox { border: none; top: 0px; right: 0px; width: 32px; height: 20px; background: #404040; text-align: right; text-wrap: nowrap; }
+   .tile { position: static; background: #808080; background-size: cover; image-rendering: pixelated; border-color: #505050; }
+   </style>
+  </head>
+ <body style="background: #202020;">
+ <div id="settings" style="border-color: #303030; left: 10px; top: 10px; width: 54px; height: 144px;">
+  <div id="restart"   style="background: #802020; border-color: #401010; text-align: center; top: 0px;  " onclick="init()">Reset</div>
+  <div id="minecount" style="background: #202080; border-color: #101040; text-align: center; top: 24px; "></div>
+  <div id="widthdiv"  style="background: #404040; border-color: #282828; text-align: left;   top: 48px; ">W: <div id="widthbox" class="textbox" contenteditable="true" oninput="trimtext(widthbox)">9</div></div>
+  <div id="heightdiv" style="background: #404040; border-color: #282828; text-align: left;   top: 72px; ">H: <div id="heightbox" class="textbox" contenteditable="true" oninput="trimtext(heightbox)">9</div></div>
+  <div id="minediv"   style="background: #404040; border-color: #282828; text-align: left;   top: 96px;">M: <div id="minebox" class="textbox" contenteditable="true" oninput="trimtext(minebox)">10</div></div>
+  <div id="sizediv"   style="background: #404040; border-color: #282828; text-align: left;   top: 120px;">S: <div id="sizebox" class="textbox" contenteditable="true" oninput="trimtext(sizebox)">20</div></div>
+  </div>
+  <div id="grid" style="border-color: #303030; border-width: 4px; top: 10px; left: 76px; display: grid; align-items: center; justify-items: center;"></div>
+  </body>
+ <script>
+  let main      = document.querySelector("#main");
+  let settings  = document.querySelector("#settings");
+  let minecount = document.querySelector("#minecount");
+  let widthbox  = document.querySelector("#widthbox");
+  let heightbox = document.querySelector("#heightbox");
+  let minebox   = document.querySelector("#minebox");
+  let sizebox   = document.querySelector("#sizebox");
+  let grid      = document.querySelector("#grid");
+  let tiles = grid.getElementsByTagName("div");
+  let width, height, mines, tilesize, unmarked, clearcount, gameover;
+  let tileimages = [
+   "url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAwAAAAMCAYAAABWdVznAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAAQSURBVChTYxgFo4AqgIEBAAJMAAH8Lw67AAAAAElFTkSuQmCC')",
+   "url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAwAAAAMCAYAAABWdVznAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsIAAA7CARUoSoAAAAA2SURBVChTYyAVMEJpKFD4D2VAwQM0eQYGJihNKQDZhG4bBJBsw3DQQCAeYAARHyTbQCJgYAAAsyAGT9wdOQwAAAAASUVORK5CYII=')",
+   "url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAwAAAAMCAYAAABWdVznAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAAxSURBVChTYyAVMEJpIFD4D2XgAA/AapnAbOoCkM0I20m2ga5+QHUrLjC4/UAMYGAAABE8CorL7Wj5AAAAAElFTkSuQmCC')",
+   "url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAwAAAAMCAYAAABWdVznAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAApSURBVChTYyAVMEJpIFD4D2XgAA/AapnAbOoCkM0I20m2YdQPNAAMDADbXQqKZ/ljIgAAAABJRU5ErkJggg==')",
+   "url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAwAAAAMCAYAAABWdVznAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAAxSURBVChTY6AAKPyHYBhA50MAE5QmGtBeAyOUBgJM96KCB2C1JNuABwyZUCIRMDAAAICYCMr9dDTxAAAAAElFTkSuQmCC')",
+   "url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAwAAAAMCAYAAABWdVznAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAAxSURBVChTYyAVMEJpIFD4D2XgAA/AapnAbPIAyAZCtpBhA139gAug+m1o+gEZMDAAABE8CoqoVyIaAAAAAElFTkSuQmCC')",
+   "url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAwAAAAMCAYAAABWdVznAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAAvSURBVChTYyAVMEJpIFD4D2XgAA/AapnAbPIAyAZCtpBhw6DwA6r44PYDMYCBAQAXjAzIYXLB/AAAAABJRU5ErkJggg==')",
+   "url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAwAAAAMCAYAAABWdVznAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAApSURBVChTYyAVMEJpIFD4D2XgAA/AapnAbOoCkM0I20m2YVQDDQADAwCgxARQOdGwIAAAAABJRU5ErkJggg==')",
+   "url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAwAAAAMCAYAAABWdVznAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAArSURBVChTYyAVMEJpIFD4D2XgAA/AapnAbPIAyAZstqCKk2zDqB9oABgYAJ+TDwbIHn56AAAAAElFTkSuQmCC')",
+   "url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAwAAAAMCAYAAABWdVznAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAABPSURBVChTvY/BCQAgDAOrE7j/lG6gpASJUXx6n7RwkRpfGUyA2fekMBUVweZ4YXQOjUmWV5nAX1auJ70KIN3jJKazPC+A56cVFTH7/oWICeCaD/42K8scAAAAAElFTkSuQmCC')",
+   "url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAwAAAAMCAYAAABWdVznAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsIAAA7CARUoSoAAAABTSURBVChTY6AK+MDA8B+EoVwUwASl4QCXQhhA0UBIMQhg2EAIoGgQYGBghDJxAgwbiNGEDYD8gtU/2ExDV4iiBl0DrlCCq0PWQChIsbmGEGBgAAAHXQzqM4pyjgAAAABJRU5ErkJggg==')"];
+  init();
+  function init(){
+   width    = parseInt(widthbox.innerText);
+   height   = parseInt(heightbox.innerText);
+   mines    = parseInt(minebox.innerText);
+   tilesize = parseInt(sizebox.innerText); 
+   unmarked = mines; 
+   clearcount = width*height-mines;
+   gameover = false;
+   if (mines > width * height) { mines = width * height; }
+   grid.style.width  = (tilesize + 4) * width + "px";
+   grid.style.height = (tilesize + 4) * height + "px";
+   grid.style.gridTemplateColumns = `repeat(${width}, ${tilesize + 4}px)`;
+   grid.style.gridTemplateRows = `repeat(${height}, ${tilesize + 4}px)`;
+   minecount.innerText = unmarked;
+   for (let i = 0; i < tiles.length;) { tiles[0].remove(); };
+   for (let i = 0; i < width*height; i++){
+    let tile = document.createElement("div");
+    tile.className = "tile";
+    tile.style.width = tilesize + "px";
+    tile.style.height = tilesize + "px";
+    tile.dataset.mine = 0;
+    tile.onclick = function() { tileclick(i); };
+    tile.oncontextmenu = function() { tilerclick(i); return false; };
+    grid.appendChild(tile);}
+   let unsettiles = [ ...tiles ];
+   for (let i = 0; i < mines; i++){
+    let settile = Math.floor(Math.random() * unsettiles.length);
+    unsettiles[settile].dataset.mine = 1;
+    unsettiles.splice(settile, 1);} }
+  function tileclick(index){
+   if (gameover) { return; }
+   let tile = tiles[index];
+   if (tile.dataset.shown || tile.dataset.marked) { return; }
+   if (tile.dataset.mine == 1){
+    gameover = 1;
+    tile.style.backgroundColor = "#802020";
+    tile.style.backgroundImage = tileimages[9];
+    return;}
+   tile.dataset.shown = 1;
+   clearcount--;
+   if (clearcount == 0) { gameover = 1; tile.style.backgroundColor = "#F0F000"; return; }
+   let bombcount = getbombcount(index);
+   if (bombcount == 0){
+    let chle, chri, chup, chdo;
+    if (index % width != 0)       { chle = true; }
+    if (index % width != width-1) { chri = true; }
+    if (index >= width)           { chup = true; }
+    if (index < width*(height-1)) { chdo = true; }
+    if (chle)         { tileclick(index-1); }
+    if (chri)         { tileclick(index+1); }
+    if (chup)         { tileclick(index-width); }
+    if (chdo)         { tileclick(index+width); }
+    if (chle && chup) { tileclick(index-width-1); }
+    if (chri && chup) { tileclick(index-width+1); }
+    if (chle && chdo) { tileclick(index+width-1); }
+    if (chri && chdo) { tileclick(index+width+1); } }
+   tile.style.backgroundColor = "#404040";
+   tile.style.backgroundImage = tileimages[bombcount];}
+  function tilerclick(index){
+   if (gameover) { return; }
+   tile = tiles[index];
+   if (tile.dataset.shown) { return; }
+   if (!tile.dataset.marked) { tile.dataset.marked = 1; tile.style.backgroundImage = tileimages[10]; unmarked--; minecount.innerText = unmarked; }
+   else                      { delete tile.dataset.marked; tile.style.backgroundImage = ""; unmarked++; minecount.innerText = unmarked; } }
+  function getbombcount(index){
+   let count = 0;
+   let chle, chri, chup, chdo;
+   if (index % width != 0)       { chle = true; }
+   if (index % width != width-1) { chri = true; }
+   if (index >= width)           { chup = true; }
+   if (index < width*(height-1)) { chdo = true; }
+   if (chle)         { count += parseInt(tiles[index-1].dataset.mine); }
+   if (chri)         { count += parseInt(tiles[index+1].dataset.mine); }
+   if (chup)         { count += parseInt(tiles[index-width].dataset.mine); }
+   if (chdo)         { count += parseInt(tiles[index+width].dataset.mine); }
+   if (chle && chup) { count += parseInt(tiles[index-width-1].dataset.mine); }
+   if (chri && chup) { count += parseInt(tiles[index-width+1].dataset.mine); }
+   if (chle && chdo) { count += parseInt(tiles[index+width-1].dataset.mine); }
+   if (chri && chdo) { count += parseInt(tiles[index+width+1].dataset.mine); }
+   return count;}
+  function trimtext(input){
+   if (input.innerText.includes("\n")) { input.innerText = input.innerText.replaceAll("\n", ""); resetcursor(input); }
+   if (input.innerText.length > 4){ input.innerText = input.innerText.substring(0, 4); resetcursor(input); }
+   Array.from(input.innerText).forEach(c => {if (isNaN(c)) { input.innerText = input.innerText.replace(c, ""); resetcursor(input); } });}
+  function resetcursor(input){
+   if (input.innerText.length == 0) { return; }
+   let range = document.createRange();
+   let sel = window.getSelection();
+   range.setStart(input.childNodes[0], input.innerText.length);
+   sel.removeAllRanges();
+   sel.addRange(range);}
+  </script>
+ </html>
