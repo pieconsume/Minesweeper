@@ -31,7 +31,7 @@
   let tiles = grid.getElementsByTagName("div");
   let width, height, mines, tilesize, unmarked, clearcount, gameover;
   let tileimages = [
-   "url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAwAAAAMCAYAAABWdVznAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAAQSURBVChTYxgFo4AqgIEBAAJMAAH8Lw67AAAAAElFTkSuQmCC')",
+   "",
    "url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAwAAAAMCAYAAABWdVznAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsIAAA7CARUoSoAAAAA2SURBVChTYyAVMEJpKFD4D2VAwQM0eQYGJihNKQDZhG4bBJBsw3DQQCAeYAARHyTbQCJgYAAAsyAGT9wdOQwAAAAASUVORK5CYII=')",
    "url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAwAAAAMCAYAAABWdVznAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAAxSURBVChTYyAVMEJpIFD4D2XgAA/AapnAbOoCkM0I20m2ga5+QHUrLjC4/UAMYGAAABE8CorL7Wj5AAAAAElFTkSuQmCC')",
    "url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAwAAAAMCAYAAABWdVznAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAApSURBVChTYyAVMEJpIFD4D2XgAA/AapnAbOoCkM0I20m2YdQPNAAMDADbXQqKZ/ljIgAAAABJRU5ErkJggg==')",
@@ -124,9 +124,9 @@
    if (chri && chdo) { count += parseInt(tiles[index+width+1].dataset.mine); }
    return count;}
   function trimtext(input){
-   if (input.innerText.includes("\n")) { input.innerText = input.innerText.replaceAll("\n", ""); resetcursor(input); }
-   if (input.innerText.length > 4){ input.innerText = input.innerText.substring(0, 4); resetcursor(input); }
-   Array.from(input.innerText).forEach(c => {if (isNaN(c)) { input.innerText = input.innerText.replace(c, ""); resetcursor(input); } });}
+   let validchars = "0123456789"
+   Array.from(input.innerText).forEach(c => {if (!validchars.includes(c)) { input.innerText = input.innerText.replace(c, ""); resetcursor(input); } });
+   if (input.innerText.length > 4){ input.innerText = input.innerText.substring(0, 4); resetcursor(input); } }
   function resetcursor(input){
    if (input.innerText.length == 0) { return; }
    let range = document.createRange();
