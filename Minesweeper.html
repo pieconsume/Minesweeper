@@ -3,10 +3,11 @@
  <head>
   <title>Minesweeper</title>
   <style>
-   * { position: absolute; margin: 0px; border-width: 0px; padding: 0px; outline: none;  -webkit-touch-callout: none; -webkit-user-select: none; -khtml-user-select: none; -moz-user-select: none; -ms-user-select: none; user-select: none; }
-   div { border-style: solid; border-width: 2px; }
+   * { position: absolute; margin: 0px; border: none; background: none; padding: 0px; outline: none;  -webkit-touch-callout: none; -webkit-user-select: none; -khtml-user-select: none; -moz-user-select: none; -ms-user-select: none; user-select: none; }
+   div, input { border-style: solid; border-width: 2px; }
    #settings > div { width: 50px; height: 20px; }
-   .textbox { border: none; top: 0px; right: 0px; width: 32px; height: 20px; background: #404040; text-align: right; text-wrap: nowrap; }
+   .textbox { border: none; top: 0px; right: 0px; width: 32px; height: 20px; background: #404040; text-align: right; text-wrap: nowrap; -moz-appearance: textfield; }
+   input::-webkit-outer-spin-button, input::-webkit-inner-spin-button { -webkit-appearance: none; }
    .tile { position: static; background: #808080; background-size: cover; image-rendering: pixelated; border-color: #505050; }
    </style>
   </head>
@@ -14,10 +15,10 @@
  <div id="settings" style="border-color: #303030; left: 10px; top: 10px; width: 54px; height: 144px;">
   <div id="restart"   style="background: #802020; border-color: #401010; text-align: center; top: 0px;  " onclick="init()">Reset</div>
   <div id="minecount" style="background: #202080; border-color: #101040; text-align: center; top: 24px; "></div>
-  <div id="widthdiv"  style="background: #404040; border-color: #282828; text-align: left;   top: 48px; ">W: <div id="widthbox"  class="textbox" contenteditable="true" oninput="trimtext(widthbox)">9</div></div>
-  <div id="heightdiv" style="background: #404040; border-color: #282828; text-align: left;   top: 72px; ">H: <div id="heightbox" class="textbox" contenteditable="true" oninput="trimtext(heightbox)">9</div></div>
-  <div id="minediv"   style="background: #404040; border-color: #282828; text-align: left;   top: 96px; ">M: <div id="minebox"   class="textbox" contenteditable="true" oninput="trimtext(minebox)">10</div></div>
-  <div id="sizediv"   style="background: #404040; border-color: #282828; text-align: left;   top: 120px;">S: <div id="sizebox"   class="textbox" contenteditable="true" oninput="trimtext(sizebox)">20</div></div>
+  <div id="widthdiv"  style="background: #404040; border-color: #282828; text-align: left;   top: 48px; ">W: <input id="widthbox"  class="textbox" type="number" value="9"/></div>
+  <div id="heightdiv" style="background: #404040; border-color: #282828; text-align: left;   top: 72px; ">H: <input id="heightbox" class="textbox" type="number" value="9"/></div>
+  <div id="minediv"   style="background: #404040; border-color: #282828; text-align: left;   top: 96px; ">M: <input id="minebox"   class="textbox" type="number" value="10"/></div>
+  <div id="sizediv"   style="background: #404040; border-color: #282828; text-align: left;   top: 120px;">S: <input id="sizebox"   class="textbox" type="number" value="20"/></div>
   </div>
   <div id="grid" style="border-color: #303030; border-width: 4px; top: 10px; left: 76px; display: grid;"></div>
   </body>
@@ -38,10 +39,10 @@
    "url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAwAAAAMCAYAAABWdVznAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsIAAA7CARUoSoAAAABTSURBVChTY6AK+MDA8B+EoVwUwASl4QCXQhhA0UBIMQhg2EAIoGgQYGBghDJxAgwbiNGEDYD8gtU/2ExDV4iiBl0DrlCCq0PWQChIsbmGEGBgAAAHXQzqM4pyjgAAAABJRU5ErkJggg==')"];
   init();
   function init(){
-   width    = parseInt(widthbox.innerText);
-   height   = parseInt(heightbox.innerText);
-   mines    = parseInt(minebox.innerText);
-   tilesize = parseInt(sizebox.innerText); 
+   width    = parseInt(widthbox.value);
+   height   = parseInt(heightbox.value);
+   mines    = parseInt(minebox.value);
+   tilesize = parseInt(sizebox.value); 
    unmarked = mines; 
    clearcount = width*height-mines;
    gameover = false;
@@ -117,16 +118,5 @@
    if (chle && chdo) { count += parseInt(tiles[index+width-1].dataset.mine); }
    if (chri && chdo) { count += parseInt(tiles[index+width+1].dataset.mine); }
    return count;}
-  function trimtext(input){
-   let validchars = "0123456789"
-   Array.from(input.innerText).forEach(c => {if (!validchars.includes(c)) { input.innerText = input.innerText.replace(c, ""); resetcursor(input); } });
-   if (input.innerText.length > 4){ input.innerText = input.innerText.substring(0, 4); resetcursor(input); } }
-  function resetcursor(input){
-   if (input.innerText.length == 0) { return; }
-   let range = document.createRange();
-   let sel = window.getSelection();
-   range.setStart(input.childNodes[0], input.innerText.length);
-   sel.removeAllRanges();
-   sel.addRange(range);}
   </script>
  </html>
